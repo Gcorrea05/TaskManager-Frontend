@@ -26,7 +26,12 @@ export const AppHeader = () => {
       </div>
       
       <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" className="relative">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="relative"
+          onClick={() => navigate('/alerts')}
+        >
           <Bell className="h-5 w-5" />
           <span className="absolute -top-1 -right-1 bg-task-red text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
             3
@@ -47,6 +52,9 @@ export const AppHeader = () => {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => navigate('/profile')}>
                 Meu Perfil
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/alerts')}>
+                Alertas de Prazo
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowAccountOverlay(true)}>
                 Configurações da Conta

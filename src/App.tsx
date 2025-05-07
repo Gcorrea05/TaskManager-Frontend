@@ -15,6 +15,7 @@ import TasksPage from "./pages/TasksPage";
 import CreateTaskPage from "./pages/CreateTaskPage";
 import TeamPage from "./pages/TeamPage";
 import ProfilePage from "./pages/ProfilePage";
+import AlertsPage from "./pages/AlertsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const AppRoutes = () => {
         <Route path="tasks/create" element={<CreateTaskPage />} />
         <Route path="team" element={<TeamPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="alerts" element={<AlertsPage />} />
       </Route>
       
       <Route path="*" element={<NotFound />} />

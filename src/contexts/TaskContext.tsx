@@ -13,6 +13,7 @@ interface TaskContextType {
   deleteTask: (taskId: string) => void;
   getTaskById: (taskId: string) => Task | undefined;
   getTeamProgress: () => number;
+  updateTaskAlert: (taskId: string, alertSettings: Task['alertSettings']) => void;
 }
 
 const TaskContext = createContext<TaskContextType>({
@@ -22,7 +23,8 @@ const TaskContext = createContext<TaskContextType>({
   updateTaskProgress: () => {},
   deleteTask: () => {},
   getTaskById: () => undefined,
-  getTeamProgress: () => 0
+  getTeamProgress: () => 0,
+  updateTaskAlert: () => {},
 });
 
 export const useTasks = () => useContext(TaskContext);
@@ -75,6 +77,22 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  // Atualizar configurações de alerta da tarefa
+  const updateTaskAlert = (taskId: string, alertSettings: Task['alertSettings']) => {
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId 
+          ? { ...task, alertSettings } 
+          : task
+      )
+    );
+    
+    toast({
+      title: "Alertas atualizados",
+      description: `As configurações de alerta foram atualizadas.`
+    });
+  };
+
   // Excluir tarefa
   const deleteTask = (taskId: string) => {
     const taskToDelete = tasks.find(task => task.id === taskId);
@@ -111,7 +129,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateTaskProgress, 
         deleteTask, 
         getTaskById,
-        getTeamProgress
+        getTeamProgress,
+        updateTaskAlert
       }}
     >
       {children}

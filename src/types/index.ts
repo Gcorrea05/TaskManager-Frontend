@@ -22,4 +22,15 @@ export interface Task {
   assignedTo: string;
   assignedBy: string;
   createdAt: string;
+  alertSettings?: {
+    enabled: boolean;
+    daysBeforeDue: number;
+    emailSent: boolean;
+  };
 }
+
+export interface AlertSettings {
+  defaultDaysBeforeDue: number;
+  enableEmailAlerts: boolean;
+}
+
