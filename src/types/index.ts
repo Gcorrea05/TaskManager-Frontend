@@ -6,6 +6,11 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  notificationPreferences?: {
+    newTasks: boolean;
+    taskUpdates: boolean;
+    mentions: boolean;
+  };
 }
 
 export interface Task {
