@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,26 +15,42 @@ const CreateTaskPage = () => {
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
+  const [subtasks, setSubtasks] = useState([{ id: Date.now(), title: '', completed: false }]);
+
   const { addTask } = useTasks();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
+  const handleAddSubtask = () => {
+    setSubtasks([...subtasks, { id: Date.now(), title: '', completed: false }]);
+  };
+
+  const handleSubtaskChange = (index, value) => {
+    const updated = [...subtasks];
+    updated[index].title = value;
+    setSubtasks(updated);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!title || !description || !dueDate || !assignedTo) {
       return;
     }
-    
+
+    const filteredSubtasks = subtasks.filter(st => st.title.trim() !== '');
+
     addTask({
+      id: Date.now().toString(),
       title,
       description,
       progress: 0,
       dueDate,
       assignedTo,
       assignedBy: currentUser?.id || '',
+      subtasks: filteredSubtasks,
     });
-    
+
     navigate('/tasks');
   };
 
@@ -45,7 +60,7 @@ const CreateTaskPage = () => {
         <h1 className="text-2xl font-bold text-gray-800">Nova Tarefa</h1>
         <p className="text-gray-600">Crie uma nova tarefa para a equipe</p>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Detalhes da Tarefa</CardTitle>
@@ -65,7 +80,7 @@ const CreateTaskPage = () => {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="description">Descrição / Briefing</Label>
               <Textarea
@@ -77,7 +92,7 @@ const CreateTaskPage = () => {
                 required
               />
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="dueDate">Prazo</Label>
@@ -89,7 +104,7 @@ const CreateTaskPage = () => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="assignee">Atribuir para</Label>
                 <Select value={assignedTo} onValueChange={setAssignedTo} required>
@@ -98,7 +113,7 @@ const CreateTaskPage = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {mockUsers
-                      .filter(user => user.id !== currentUser?.id) // Opcional: não mostrar o usuário atual
+                      .filter(user => user.id !== currentUser?.id)
                       .map(user => (
                         <SelectItem key={user.id} value={user.id}>
                           {user.name} ({user.role})
@@ -108,7 +123,24 @@ const CreateTaskPage = () => {
                 </Select>
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label>Subtarefas</Label>
+              {subtasks.map((subtask, index) => (
+                <Input
+                  key={subtask.id}
+                  placeholder={`Subtarefa ${index + 1}`}
+                  value={subtask.title}
+                  onChange={(e) => handleSubtaskChange(index, e.target.value)}
+                  className="mb-2"
+                />
+              ))}
+              <Button type="button" onClick={handleAddSubtask}>
+                + Adicionar Subtarefa
+              </Button>
+            </div>
           </CardContent>
+
           <CardFooter className="flex justify-between">
             <Button variant="outline" type="button" onClick={() => navigate('/tasks')}>
               Cancelar

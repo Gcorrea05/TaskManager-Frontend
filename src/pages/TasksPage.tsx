@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { TaskCard } from '@/components/TaskCard';
 import { TeamProgress } from '@/components/TeamProgress';
@@ -9,13 +8,19 @@ import { Plus } from 'lucide-react';
 import { mockUsers } from '@/data/mockData';
 
 const TasksPage = () => {
-  const { tasks } = useTasks();
+  const { tasks, deleteTask } = useTasks();  // <- pega deleteTask do contexto
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
   const getUserNameById = (userId: string) => {
     const user = mockUsers.find(u => u.id === userId);
     return user ? user.name : 'Usuário Desconhecido';
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    if (window.confirm('Tem certeza que deseja deletar esta tarefa?')) {
+      deleteTask(taskId);
+    }
   };
 
   return (
@@ -37,12 +42,19 @@ const TasksPage = () => {
       
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {tasks.map(task => (
-          <div key={task.id} className="flex flex-col">
+          <div key={task.id} className="flex flex-col border rounded p-2">
             <TaskCard task={task} />
             <div className="mt-2 px-4 text-xs text-gray-500">
               <p>Atribuído para: {getUserNameById(task.assignedTo)}</p>
               <p>Por: {getUserNameById(task.assignedBy)}</p>
             </div>
+            <Button 
+              variant="destructive" 
+              className="mt-2"
+              onClick={() => handleDeleteTask(task.id)}
+            >
+              Remover
+            </Button>
           </div>
         ))}
         {tasks.length === 0 && (
@@ -63,7 +75,6 @@ const TasksPage = () => {
         <Button 
           variant="outline" 
           onClick={() => {
-            // Aqui você implementaria a exportação CSV real
             alert('Exportação de tarefas para CSV - funcionalidade a ser implementada');
           }}
         >

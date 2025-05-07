@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AppHeader } from './AppHeader';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from '@/components/ui/sidebar';
@@ -13,9 +12,12 @@ export const Layout: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex w-full">
         <Sidebar>
           <SidebarContent>
-            <div className="p-4">
-              <h2 className="text-xl font-bold text-task-blue">Task Twin</h2>
-              <p className="text-xs text-gray-500">Sistema de Gestão de Tarefas</p>
+            <div className="p-4 flex items-center">
+              <img src="/logo.png" alt="Task Manager Logo" className="h-8 w-8 mr-2" />
+              <div>
+                <h2 className="text-xl font-bold text-task-blue">Task Manager</h2>
+                <p className="text-xs text-gray-500">Sistema de Gestão de Tarefas</p>
+              </div>
             </div>
             
             <SidebarGroup>

@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Task } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -7,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Calendar, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTasks } from '@/contexts/TaskContext';
 import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface TaskCardProps {
   task: Task;
@@ -15,18 +15,33 @@ interface TaskCardProps {
 
 export const TaskCard = ({ task, showControls = true }: TaskCardProps) => {
   const { updateTaskProgress } = useTasks();
-  const [progress, setProgress] = useState(task.progress);
+
+  const [editableSubtasks, setEditableSubtasks] = useState(task.subtasks || []);
+  const [progress, setProgress] = useState(0);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
+
+  useEffect(() => {
+    const completed = editableSubtasks.filter(st => st.completed).length;
+    const total = editableSubtasks.length;
+    const calcProgress = total === 0 ? 0 : Math.round((completed / total) * 100);
+    setProgress(calcProgress);
+  }, [editableSubtasks]);
 
   const today = new Date();
   const dueDate = new Date(task.dueDate);
-  const isOverdue = dueDate < today && task.progress < 100;
-  const isDueSoon = !isOverdue && dueDate <= new Date(today.setDate(today.getDate() + 3)) && task.progress < 100;
-  const isCompleted = task.progress === 100;
+  const isOverdue = dueDate < today && progress < 100;
+  const isDueSoon = !isOverdue && dueDate <= new Date(today.setDate(today.getDate() + 3)) && progress < 100;
+  const isCompleted = progress === 100;
 
   const handleUpdateProgress = () => {
-    updateTaskProgress(task.id, progress);
+    updateTaskProgress(task.id, progress, editableSubtasks); // envia subtasks atualizadas
     setIsUpdateMode(false);
+  };
+
+  const toggleSubtask = (index: number) => {
+    const updated = [...editableSubtasks];
+    updated[index].completed = !updated[index].completed;
+    setEditableSubtasks(updated);
   };
 
   const getStatusColor = () => {
@@ -58,20 +73,40 @@ export const TaskCard = ({ task, showControls = true }: TaskCardProps) => {
           {getStatusText()}
         </div>
       </div>
-      
+
       <div className="mt-3 flex items-center text-sm text-gray-500">
         <Calendar className="h-4 w-4 mr-1" />
         <span>Prazo: {formatDate(task.dueDate)}</span>
       </div>
-      
+
       <div className="mt-4">
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Progresso</span>
-          <span className="font-medium">{task.progress}%</span>
+          <span className="font-medium">{progress}%</span>
         </div>
-        <Progress className="mt-1" value={task.progress} />
+        <Progress className="mt-1" value={progress} />
+        <p className="text-xs text-gray-500 mt-1">
+          {editableSubtasks.filter(st => st.completed).length}/{editableSubtasks.length} subtarefas concluídas
+        </p>
       </div>
-      
+
+      {editableSubtasks.length > 0 && (
+        <ul className="mt-2 list-disc list-inside text-sm">
+          {editableSubtasks.map((subtask, index) => (
+            <li key={subtask.id} className={subtask.completed ? "line-through text-green-600" : ""}>
+              {subtask.title}
+              {isUpdateMode && (
+                <Checkbox
+                  checked={subtask.completed}
+                  onCheckedChange={() => toggleSubtask(index)}
+                  className="ml-2"
+                />
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
       <div className="mt-4 flex items-center justify-between">
         <Dialog>
           <DialogTrigger asChild>
@@ -88,13 +123,13 @@ export const TaskCard = ({ task, showControls = true }: TaskCardProps) => {
                   Prazo: {formatDate(task.dueDate)}
                 </div>
                 <div className="mt-1 text-sm text-gray-500">
-                  Progresso atual: {task.progress}%
+                  Progresso atual: {progress}%
                 </div>
               </DialogDescription>
             </DialogHeader>
           </DialogContent>
         </Dialog>
-        
+
         {showControls && (
           <div className="space-x-2">
             {isUpdateMode ? (
@@ -114,23 +149,6 @@ export const TaskCard = ({ task, showControls = true }: TaskCardProps) => {
           </div>
         )}
       </div>
-      
-      {isUpdateMode && (
-        <div className="mt-4">
-          <label className="text-sm text-gray-600">Ajustar progresso:</label>
-          <div className="flex items-center mt-2">
-            <Slider 
-              value={[progress]} 
-              min={0} 
-              max={100} 
-              step={5}
-              onValueChange={(value) => setProgress(value[0])}
-              className="mr-4"
-            />
-            <span className="w-10 text-sm font-medium">{progress}%</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

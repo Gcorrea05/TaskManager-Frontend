@@ -21,8 +21,6 @@ export const AppHeader = () => {
   return (
     <header className="w-full bg-white border-b border-gray-200 py-3 px-6 flex items-center justify-between">
       <div className="flex items-center space-x-2">
-        <img src="/placeholder.svg" alt="Logo" className="h-8 w-8" />
-        <h1 className="text-xl font-bold text-task-blue">Task Twin</h1>
       </div>
       
       <div className="flex items-center space-x-4">
