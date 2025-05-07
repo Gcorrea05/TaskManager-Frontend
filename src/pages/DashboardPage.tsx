@@ -1,13 +1,16 @@
-
 import { useTasks } from '@/contexts/TaskContext';
 import { TeamProgress } from '@/components/TeamProgress';
 import { TaskCard } from '@/components/TaskCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 
 const DashboardPage = () => {
   const { userTasks } = useTasks();
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   
   // Filtrando tarefas por status
   const completedTasks = userTasks.filter(task => task.progress === 100);
@@ -22,9 +25,17 @@ const DashboardPage = () => {
   
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-        <p className="text-gray-600">Bem-vindo(a), {currentUser?.name}!</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-gray-600">Bem-vindo(a), {currentUser?.name}!</p>
+        </div>
+        <Button 
+          onClick={() => navigate('/tasks/create')}
+          className="mt-3 sm:mt-0 flex items-center"
+        >
+          <Plus className="mr-1 h-4 w-4" /> Nova Tarefa
+        </Button>
       </div>
       
       <TeamProgress />
