@@ -9,7 +9,7 @@ interface TaskContextType {
   tasks: Task[];
   userTasks: Task[];
   addTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
-  updateTaskProgress: (taskId: string, progress: number, dueDate?: string) => void;
+  updateTaskProgress: (taskId: string, progress: number) => void;
   deleteTask: (taskId: string) => void;
   getTaskById: (taskId: string) => Task | undefined;
   getTeamProgress: () => number;
@@ -61,22 +61,18 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  // Atualizar progresso da tarefa e data de conclusão (se fornecida)
-  const updateTaskProgress = (taskId: string, progress: number, dueDate?: string) => {
+  // Atualizar progresso da tarefa
+  const updateTaskProgress = (taskId: string, progress: number) => {
     setTasks(prevTasks => 
       prevTasks.map(task => 
         task.id === taskId 
-          ? { 
-              ...task, 
-              progress,
-              ...(dueDate ? { dueDate } : {})
-            } 
+          ? { ...task, progress } 
           : task
       )
     );
     
     toast({
-      title: "Tarefa atualizada",
+      title: "Progresso atualizado",
       description: `O progresso da tarefa foi atualizado para ${progress}%.`
     });
   };
