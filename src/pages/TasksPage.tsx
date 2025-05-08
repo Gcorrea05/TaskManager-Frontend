@@ -5,17 +5,11 @@ import { useTasks } from '@/contexts/TaskContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { mockUsers } from '@/data/mockData';
 
 const TasksPage = () => {
-  const { tasks, deleteTask } = useTasks();  // <- pega deleteTask do contexto
+  const { tasks, deleteTask } = useTasks();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-
-  const getUserNameById = (userId: string) => {
-    const user = mockUsers.find(u => u.id === userId);
-    return user ? user.name : 'Usuário Desconhecido';
-  };
 
   const handleDeleteTask = (taskId: string) => {
     if (window.confirm('Tem certeza que deseja deletar esta tarefa?')) {
@@ -30,26 +24,32 @@ const TasksPage = () => {
           <h1 className="text-2xl font-bold text-gray-800">Todas as Tarefas</h1>
           <p className="text-gray-600">Visão geral de todas as tarefas da equipe</p>
         </div>
-        <Button 
+        <Button
           onClick={() => navigate('/tasks/create')}
           className="mt-3 sm:mt-0 flex items-center"
         >
           <Plus className="mr-1 h-4 w-4" /> Nova Tarefa
         </Button>
       </div>
-      
+
       <TeamProgress />
-      
+
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {tasks.map(task => (
+        {tasks.map((task) => (
           <div key={task.id} className="flex flex-col border rounded p-2">
             <TaskCard task={task} />
             <div className="mt-2 px-4 text-xs text-gray-500">
-              <p>Atribuído para: {getUserNameById(task.assignedTo)}</p>
-              <p>Por: {getUserNameById(task.assignedBy)}</p>
+              <p>
+                Atribuído para:{' '}
+                {task.assignedToName ? task.assignedToName : 'Usuário Desconhecido'}
+              </p>
+              <p>
+                Por:{' '}
+                {task.assignedByName ? task.assignedByName : 'Usuário Desconhecido'}
+              </p>
             </div>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               className="mt-2"
               onClick={() => handleDeleteTask(task.id)}
             >
@@ -60,7 +60,7 @@ const TasksPage = () => {
         {tasks.length === 0 && (
           <div className="col-span-full py-12 text-center">
             <p className="text-gray-500">Nenhuma tarefa encontrada.</p>
-            <Button 
+            <Button
               onClick={() => navigate('/tasks/create')}
               variant="outline"
               className="mt-4"
@@ -70,10 +70,10 @@ const TasksPage = () => {
           </div>
         )}
       </div>
-      
+
       <div className="mt-8 flex justify-center">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => {
             alert('Exportação de tarefas para CSV - funcionalidade a ser implementada');
           }}

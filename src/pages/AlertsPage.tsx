@@ -1,19 +1,16 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTasks } from '@/contexts/TaskContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { mockUsers } from '@/data/mockData';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Bell, CalendarClock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { AlertSettings, Task } from '@/types';
+import { AlertSettings } from '@/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 const AlertsPage = () => {
@@ -21,21 +18,13 @@ const AlertsPage = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Estado para configurações de alertas global
+
   const [alertSettings, setAlertSettings] = useState<AlertSettings>({
     defaultDaysBeforeDue: 3,
-    enableEmailAlerts: true
+    enableEmailAlerts: true,
   });
 
-  // Estado para configurações de alerta por tarefa
-  const [taskAlerts, setTaskAlerts] = useState<Record<string, {enabled: boolean, daysBeforeDue: number}>>({});
-
-  // Função auxiliar para obter nome de usuário pelo ID
-  const getUserNameById = (userId: string) => {
-    const user = mockUsers.find(u => u.id === userId);
-    return user ? user.name : 'Usuário Desconhecido';
-  };
+  const [taskAlerts, setTaskAlerts] = useState<Record<string, { enabled: boolean; daysBeforeDue: number }>>({});
 
   // Função para calcular os dias restantes até o prazo
   const getDaysRemaining = (dueDate: string) => {
@@ -46,54 +35,47 @@ const AlertsPage = () => {
     return diffDays;
   };
 
-  // Função para ativar/desativar alertas para uma tarefa específica
   const toggleTaskAlert = (taskId: string, enabled: boolean) => {
-    setTaskAlerts(prev => ({
+    setTaskAlerts((prev) => ({
       ...prev,
       [taskId]: {
         ...(prev[taskId] || { daysBeforeDue: alertSettings.defaultDaysBeforeDue }),
-        enabled
-      }
+        enabled,
+      },
     }));
 
     toast({
-      title: enabled ? "Alerta ativado" : "Alerta desativado",
-      description: `O alerta para a tarefa foi ${enabled ? "ativado" : "desativado"}.`
+      title: enabled ? 'Alerta ativado' : 'Alerta desativado',
+      description: `O alerta para a tarefa foi ${enabled ? 'ativado' : 'desativado'}.`,
     });
   };
 
-  // Função para atualizar os dias de antecedência para alerta
   const updateDaysBeforeDue = (taskId: string, days: number) => {
-    setTaskAlerts(prev => ({
+    setTaskAlerts((prev) => ({
       ...prev,
       [taskId]: {
         ...(prev[taskId] || { enabled: false }),
-        daysBeforeDue: days
-      }
+        daysBeforeDue: days,
+      },
     }));
   };
 
-  // Função para simular o envio de e-mail de alerta
   const sendTestAlert = () => {
     toast({
-      title: "Email de teste enviado",
-      description: "Um email de teste foi enviado para o seu endereço cadastrado."
+      title: 'Email de teste enviado',
+      description: 'Um email de teste foi enviado para o seu endereço cadastrado.',
     });
   };
 
-  // Função para salvar configurações de alertas
   const saveAlertSettings = () => {
-    // Aqui você implementaria a lógica para persistir os dados no backend
     toast({
-      title: "Configurações salvas",
-      description: "Suas configurações de alertas foram salvas com sucesso."
+      title: 'Configurações salvas',
+      description: 'Suas configurações de alertas foram salvas com sucesso.',
     });
   };
 
-  // Filtrar tarefas pendentes (não concluídas)
-  const pendingTasks = tasks.filter(task => task.progress < 100);
+  const pendingTasks = tasks.filter((task) => task.progress < 100);
 
-  // Classificar tarefas por proximidade do prazo
   const sortedTasks = [...pendingTasks].sort((a, b) => {
     const daysA = getDaysRemaining(a.dueDate);
     const daysB = getDaysRemaining(b.dueDate);
@@ -108,7 +90,7 @@ const AlertsPage = () => {
           <p className="text-gray-600">Configure alertas por email para prazos de tarefas</p>
         </div>
       </div>
-      
+
       <div className="grid gap-6 mb-8">
         <Card>
           <CardHeader>
@@ -116,9 +98,7 @@ const AlertsPage = () => {
               <Bell className="h-5 w-5" />
               <span>Configurações de Alertas</span>
             </CardTitle>
-            <CardDescription>
-              Defina as configurações padrão para os alertas de prazo
-            </CardDescription>
+            <CardDescription>Defina as configurações padrão para os alertas de prazo</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
@@ -131,10 +111,10 @@ const AlertsPage = () => {
               <Switch
                 id="email-alerts"
                 checked={alertSettings.enableEmailAlerts}
-                onCheckedChange={(checked) => setAlertSettings({...alertSettings, enableEmailAlerts: checked})}
+                onCheckedChange={(checked) => setAlertSettings({ ...alertSettings, enableEmailAlerts: checked })}
               />
             </div>
-            
+
             <div className="flex flex-col space-y-2">
               <Label htmlFor="days-before">Dias antes do prazo para alertar</Label>
               <div className="flex items-center space-x-4">
@@ -142,7 +122,9 @@ const AlertsPage = () => {
                   id="days-before"
                   type="number"
                   value={alertSettings.defaultDaysBeforeDue}
-                  onChange={(e) => setAlertSettings({...alertSettings, defaultDaysBeforeDue: Number(e.target.value)})}
+                  onChange={(e) =>
+                    setAlertSettings({ ...alertSettings, defaultDaysBeforeDue: Number(e.target.value) })
+                  }
                   min={1}
                   max={30}
                   className="w-24"
@@ -171,9 +153,7 @@ const AlertsPage = () => {
               <CalendarClock className="h-5 w-5" />
               <span>Tarefas com Prazo Próximo</span>
             </CardTitle>
-            <CardDescription>
-              Gerencie alertas para tarefas com prazos próximos
-            </CardDescription>
+            <CardDescription>Gerencie alertas para tarefas com prazos próximos</CardDescription>
           </CardHeader>
           <CardContent>
             {sortedTasks.length > 0 ? (
@@ -192,11 +172,11 @@ const AlertsPage = () => {
                   {sortedTasks.map((task) => {
                     const daysRemaining = getDaysRemaining(task.dueDate);
                     const isUrgent = daysRemaining <= 3;
-                    const taskAlert = taskAlerts[task.id] || { 
+                    const taskAlert = taskAlerts[task.id] || {
                       enabled: false,
-                      daysBeforeDue: alertSettings.defaultDaysBeforeDue
+                      daysBeforeDue: alertSettings.defaultDaysBeforeDue,
                     };
-                    
+
                     return (
                       <TableRow key={task.id}>
                         <TableCell>{task.title}</TableCell>
@@ -206,7 +186,7 @@ const AlertsPage = () => {
                             {daysRemaining} dia(s)
                           </span>
                         </TableCell>
-                        <TableCell>{getUserNameById(task.assignedTo)}</TableCell>
+                        <TableCell>{task.assignedToName || 'Usuário Desconhecido'}</TableCell>
                         <TableCell>
                           <Switch
                             checked={taskAlert.enabled}
@@ -239,13 +219,11 @@ const AlertsPage = () => {
             <Button variant="outline" onClick={() => navigate('/tasks')}>
               Ver todas as tarefas
             </Button>
-            <Button onClick={saveAlertSettings}>
-              Salvar alterações
-            </Button>
+            <Button onClick={saveAlertSettings}>Salvar alterações</Button>
           </CardFooter>
         </Card>
       </div>
-      
+
       <Alert className="mb-6">
         <AlertTitle>Como funcionam os alertas?</AlertTitle>
         <AlertDescription>

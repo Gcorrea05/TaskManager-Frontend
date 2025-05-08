@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTasks } from '@/contexts/TaskContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { mockUsers } from '@/data/mockData';
 
 const CreateTaskPage = () => {
   const [title, setTitle] = useState('');
@@ -16,10 +15,27 @@ const CreateTaskPage = () => {
   const [dueDate, setDueDate] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
   const [subtasks, setSubtasks] = useState([{ id: Date.now(), title: '', completed: false }]);
+  const [users, setUsers] = useState([]);
 
   const { addTask } = useTasks();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+
+  const apiUrl = 'http://localhost:3000/api';
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch(`${apiUrl}/users`);
+        const data = await res.json();
+        setUsers(data);
+      } catch (error) {
+        console.error('Erro ao carregar usuários:', error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const handleAddSubtask = () => {
     setSubtasks([...subtasks, { id: Date.now(), title: '', completed: false }]);
@@ -31,17 +47,16 @@ const CreateTaskPage = () => {
     setSubtasks(updated);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!title || !description || !dueDate || !assignedTo) {
       return;
     }
 
-    const filteredSubtasks = subtasks.filter(st => st.title.trim() !== '');
+    const filteredSubtasks = subtasks.filter((st) => st.title.trim() !== '');
 
-    addTask({
-      id: Date.now().toString(),
+    await addTask({
       title,
       description,
       progress: 0,
@@ -64,9 +79,7 @@ const CreateTaskPage = () => {
       <Card>
         <CardHeader>
           <CardTitle>Detalhes da Tarefa</CardTitle>
-          <CardDescription>
-            Preencha todas as informações necessárias para a nova tarefa.
-          </CardDescription>
+          <CardDescription>Preencha todas as informações necessárias para a nova tarefa.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -112,9 +125,9 @@ const CreateTaskPage = () => {
                     <SelectValue placeholder="Selecione um membro" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockUsers
-                      .filter(user => user.id !== currentUser?.id)
-                      .map(user => (
+                    {users
+                      .filter((user) => user.id !== currentUser?.id)
+                      .map((user) => (
                         <SelectItem key={user.id} value={user.id}>
                           {user.name} ({user.role})
                         </SelectItem>

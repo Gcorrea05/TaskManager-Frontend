@@ -1,16 +1,15 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { Task } from '../types';
-import { mockTasks } from '../data/mockData';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './AuthContext';
+import api from '@/api/api';
 
 interface TaskContextType {
   tasks: Task[];
   userTasks: Task[];
-  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
-  updateTaskProgress: (taskId: string, progress: number) => void;
-  deleteTask: (taskId: string) => void;
+  addTask: (task: Omit<Task, 'id'>) => Promise<void>;
+  updateTaskProgress: (taskId: string, progress: number) => Promise<void>;
+  deleteTask: (taskId: string) => Promise<void>;
   getTaskById: (taskId: string) => Task | undefined;
   getTeamProgress: () => number;
   updateTaskAlert: (taskId: string, alertSettings: Task['alertSettings']) => void;
@@ -19,9 +18,9 @@ interface TaskContextType {
 const TaskContext = createContext<TaskContextType>({
   tasks: [],
   userTasks: [],
-  addTask: () => {},
-  updateTaskProgress: () => {},
-  deleteTask: () => {},
+  addTask: async () => {},
+  updateTaskProgress: async () => {},
+  deleteTask: async () => {},
   getTaskById: () => undefined,
   getTeamProgress: () => 0,
   updateTaskAlert: () => {},
@@ -34,103 +33,108 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { currentUser } = useAuth();
   const { toast } = useToast();
 
-  // Carregar tarefas
+  // Carregar tarefas do backend
   useEffect(() => {
-    // Em produção, isso seria uma chamada de API
-    setTasks(mockTasks);
+    const fetchTasks = async () => {
+      try {
+        const response = await api.get('/tasks');
+        const data = response.data;
+        setTasks(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Erro ao carregar tarefas:', error);
+      }
+    };
+
+    fetchTasks();
   }, []);
 
-  // Filtrar tarefas do usuário
-  const userTasks = tasks.filter(task => 
-    currentUser ? task.assignedTo === currentUser.id : false
-  );
+  const userTasks = Array.isArray(tasks)
+    ? tasks.filter(task => currentUser && task.assigned_to === currentUser.id)
+    : [];
 
-  // Adicionar nova tarefa
-  const addTask = (task: Omit<Task, 'id' | 'createdAt'>) => {
-    const newTask: Task = {
-      ...task,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    
-    setTasks(prevTasks => [...prevTasks, newTask]);
-    
-    toast({
-      title: "Tarefa criada",
-      description: `A tarefa "${task.title}" foi criada com sucesso.`
-    });
+  const addTask = async (task: Omit<Task, 'id'>) => {
+    try {
+      const response = await api.post('/tasks', task);
+      const newTask = response.data;
+      setTasks(prev => [...prev, newTask]);
+
+      toast({
+        title: 'Tarefa criada',
+        description: `A tarefa "${newTask.title}" foi criada com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao criar tarefa:', error);
+    }
   };
 
-  // Atualizar progresso da tarefa
-  const updateTaskProgress = (taskId: string, progress: number) => {
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId 
-          ? { ...task, progress } 
-          : task
-      )
-    );
-    
-    toast({
-      title: "Progresso atualizado",
-      description: `O progresso da tarefa foi atualizado para ${progress}%.`
-    });
+  const updateTaskProgress = async (taskId: string, progress: number) => {
+    try {
+      await api.put(`/tasks/${taskId}`, { progress });
+
+      setTasks(prev =>
+        prev.map(task =>
+          task.id === taskId ? { ...task, progress } : task
+        )
+      );
+
+      toast({
+        title: 'Progresso atualizado',
+        description: `O progresso foi atualizado para ${progress}%.`,
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar progresso:', error);
+    }
   };
 
-  // Atualizar configurações de alerta da tarefa
-  const updateTaskAlert = (taskId: string, alertSettings: Task['alertSettings']) => {
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId 
-          ? { ...task, alertSettings } 
-          : task
-      )
-    );
-    
-    toast({
-      title: "Alertas atualizados",
-      description: `As configurações de alerta foram atualizadas.`
-    });
+  const deleteTask = async (taskId: string) => {
+    try {
+      await api.delete(`/tasks/${taskId}`);
+
+      setTasks(prev => prev.filter(task => task.id !== taskId));
+
+      toast({
+        title: 'Tarefa removida',
+        description: `A tarefa foi removida com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao deletar tarefa:', error);
+    }
   };
 
-  // Excluir tarefa
-  const deleteTask = (taskId: string) => {
-    const taskToDelete = tasks.find(task => task.id === taskId);
-    
-    if (!taskToDelete) return;
-    
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-    
-    toast({
-      title: "Tarefa removida",
-      description: `A tarefa "${taskToDelete.title}" foi removida.`
-    });
-  };
-
-  // Obter tarefa por ID
   const getTaskById = (taskId: string) => {
     return tasks.find(task => task.id === taskId);
   };
 
-  // Calcular progresso da equipe
   const getTeamProgress = () => {
     if (tasks.length === 0) return 0;
-    
+
     const totalProgress = tasks.reduce((acc, task) => acc + task.progress, 0);
     return Math.round(totalProgress / tasks.length);
   };
 
+  const updateTaskAlert = (taskId: string, alertSettings: Task['alertSettings']) => {
+    setTasks(prev =>
+      prev.map(task =>
+        task.id === taskId ? { ...task, alertSettings } : task
+      )
+    );
+    toast({
+      title: 'Alertas atualizados',
+      description: 'As configurações de alerta foram atualizadas.',
+    });
+  };
+
   return (
-    <TaskContext.Provider 
-      value={{ 
-        tasks, 
-        userTasks, 
-        addTask, 
-        updateTaskProgress, 
-        deleteTask, 
+    <TaskContext.Provider
+      value={{
+        tasks,
+        userTasks,
+        addTask,
+        updateTaskProgress,
+        deleteTask,
         getTaskById,
         getTeamProgress,
-        updateTaskAlert
+        updateTaskAlert,
       }}
     >
       {children}
